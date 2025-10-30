@@ -409,7 +409,7 @@ class AsyncVLLMInferenceEngine(BaseVLLMInferenceEngine):
         model_name = model_path
 
         base_model_paths = [BaseModelPath(name=model_name, model_path=model_path)]
-        models = OpenAIServingModels(engine, model_config, base_model_paths)
+        models = OpenAIServingModels(engine, base_model_paths)
         # TODO(Charlie): revisit kwargs `enable_auto_tools` and `tool_parser` when we need to
         # support OAI-style tool calling; and `request_logger` for better debugging.
         self.openai_serving_chat = OpenAIServingChat(
