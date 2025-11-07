@@ -103,6 +103,8 @@ class RayPPOTrainer:
         self.reward_kl_controller: Optional[Union[FixedKLController, AdaptiveKLController]] = None
         configure_ray_worker_logging()
 
+        self._upload_refs: Optional[List[ray.ObjectRef]] = None
+
     @torch.no_grad()
     async def eval(self) -> Dict[str, float]:
         """
@@ -986,6 +988,7 @@ class RayPPOTrainer:
 
         If colocate_all is True, assumes that the policy model is currently on GPU.
         """
+
         # Create global step folder structure
         global_step_folder = os.path.join(self.cfg.trainer.ckpt_path, f"global_step_{self.global_step}")
         policy_save_dir = os.path.join(global_step_folder, "policy")
