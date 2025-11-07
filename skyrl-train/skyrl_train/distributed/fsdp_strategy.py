@@ -211,8 +211,20 @@ class FSDPStrategy(DistributedStrategy):
     def _fsdp_init_model(self, model, is_train=True, is_wrapped=False):
         # Initialize FSDP wrapping policy
         wrap_policy = get_fsdp_wrap_policy(
-            module=model, config=self.fsdp_config.get("wrap_policy", None), is_lora=self.is_lora
+            module=model.model if is_wrapped else model,
+            config=self.fsdp_config.get("wrap_policy", None),
+            is_lora=self.is_lora,
         )
+        from skyrl_train.utils.utils import print_mem
+
+        free, total = torch.cuda.mem_get_info()
+        mem = {
+            "allocated": torch.cuda.memory_allocated(),
+            "reserved": torch.cuda.memory_reserved(),
+            "free": free,
+            "total": total,
+        }
+        print_mem("Before init", mem)
 
         # Setup mixed precision
         mixed_precision_config = self.fsdp_config.get("mixed_precision", None)
@@ -239,6 +251,8 @@ class FSDPStrategy(DistributedStrategy):
             # see https://docs.pytorch.org/docs/stable/fsdp.html
             if not is_train and self.fsdp_config.get("cpu_offload", False):
                 cpu_offload = CPUOffload(offload_params=True)
+            # init_fn: initialize empty parameters onto the meta device. Can I initialize empty params byut with sharded dims somehow.
+            # option 2:
             fsdp_module = FSDP(
                 model.model if is_wrapped else model,
                 cpu_offload=cpu_offload,
